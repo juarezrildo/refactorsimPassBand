@@ -8,7 +8,8 @@ import { registry } from './registry.js';
  * @returns {number} BER teórica
  */
 export function calculateTheoreticalBER(scheme, ebn0dB) {
-  const mod = typeof scheme === 'string' ? registry.get(scheme) : scheme;
+  const name = typeof scheme === 'string' ? scheme : scheme?.name;
+  const mod = registry.get(name);
   return mod.berTheory(ebn0dB);
 }
 
@@ -21,11 +22,12 @@ export function calculateTheoreticalBER(scheme, ebn0dB) {
  * @returns {number} Eb/N0 requerida en dB
  */
 export function calculateRequiredEbN0(scheme, targetBER = 1e-5, iterations = 40) {
+  const name = typeof scheme === 'string' ? scheme : scheme?.name;
   let lo = 0;
   let hi = 40;
   for (let i = 0; i < iterations; i++) {
     const m = (lo + hi) / 2;
-    if (calculateTheoreticalBER(scheme, m) > targetBER) {
+    if (calculateTheoreticalBER(name, m) > targetBER) {
       lo = m;
     } else {
       hi = m;

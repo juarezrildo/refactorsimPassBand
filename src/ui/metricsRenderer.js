@@ -8,7 +8,7 @@ import { calculateTheoreticalBER, calculateRequiredEbN0 } from '../core/theory.j
 import { calculateLinkBudget } from '../core/link.js';
 
 /**
- * Renderiza la grilla de métricas de enlace y el mensaje explicativo.
+ * Renderiza la grilla de métricas de enlace y el panel de diagnóstico pedagógico con estilo Pro Max.
  * 
  * @param {HTMLElement} metricsContainer Contenedor de las tarjetas de métricas (#mt)
  * @param {HTMLElement} messageElement Elemento para el párrafo explicativo (#msg)
@@ -16,6 +16,8 @@ import { calculateLinkBudget } from '../core/link.js';
  * @param {object} uiParams Parámetros ingresados por el usuario
  */
 export function renderMetrics(metricsContainer, messageElement, simulationResult, uiParams) {
+  if (!metricsContainer || !messageElement || !simulationResult) return;
+
   const scheme = simulationResult.scheme;
   const k = scheme.k;
   const g = simulationResult.ebn0dB;
@@ -34,60 +36,132 @@ export function renderMetrics(metricsContainer, messageElement, simulationResult
   const berTheory = calculateTheoreticalBER(scheme, g);
   const requiredEbN0 = calculateRequiredEbN0(scheme, 1e-5);
   const serPercent = ((100 * simulationResult.se) / simulationResult.nSymbols).toFixed(2);
+  const isReliable = g >= requiredEbN0;
 
-  const cards = [
-    { label: 'Bits por símbolo (k)', value: `${k}` },
-    { label: 'Tasa de símbolos Rs', value: formatRate(link.symbolRate, 'symbols') },
-    { label: 'Ancho de banda B', value: formatRate(link.bandwidth, 'hz') },
-    { label: 'Eficiencia espectral', value: `${link.spectralEfficiency.toFixed(2)} bit/s/Hz` },
-    { label: 'Es/N0', value: `${link.esn0dB.toFixed(1)} dB` },
-    { label: 'BER teórica', value: formatScientific(berTheory) },
+  const cardsData = [
     {
+      category: 'MODULACIÓN',
+      label: 'Bits por símbolo (k)',
+      value: `${k}`,
+      sub: `M = ${scheme.M} símbolos`
+    },
+    {
+      category: 'SEÑALIZACIÓN',
+      label: 'Tasa de símbolos Rs',
+      value: formatRate(link.symbolRate, 'symbols'),
+      sub: 'Baudios = Rb ÷ k'
+    },
+    {
+      category: 'ESPECTRO',
+      label: 'Ancho de banda B',
+      value: formatRate(link.bandwidth, 'hz'),
+      sub: `Nyquist con α = ${rollOff.toFixed(2)}`
+    },
+    {
+      category: 'EFICIENCIA',
+      label: 'Eficiencia espectral',
+      value: `${link.spectralEfficiency.toFixed(2)}`,
+      sub: 'bit/s / Hz = k ÷ (1 + α)'
+    },
+    {
+      category: 'ENERGÍA',
+      label: 'Relación Es/N0',
+      value: `${link.esn0dB.toFixed(1)} dB`,
+      sub: 'Eb/N0 + 10·log₁₀(k)'
+    },
+    {
+      category: 'TEORÍA',
+      label: 'BER teórica',
+      value: formatScientific(berTheory),
+      sub: 'Límite analítico AWGN'
+    },
+    {
+      category: 'SIMULACIÓN',
       label: 'BER simulada',
-      value: `${formatScientific(simulationResult.berSim)}<small>${simulationResult.be} errores en ${simulationResult.bits} bits</small>`
+      value: formatScientific(simulationResult.berSim),
+      sub: `${formatNumber(simulationResult.be)} errs en ${formatNumber(simulationResult.bits)} bits`
     },
-    { label: 'Errores de símbolo', value: `${serPercent} %` },
-    { label: 'Eb/N0 para BER 10⁻⁵', value: `${requiredEbN0.toFixed(1)} dB` },
     {
+      category: 'CALIDAD',
+      label: 'Errores de símbolo',
+      value: `${serPercent} %`,
+      sub: `${formatNumber(simulationResult.se)} de ${formatNumber(simulationResult.nSymbols)} símb`
+    },
+    {
+      category: 'CONSIGNACIÓN',
+      label: 'Eb/N0 para BER 10⁻⁵',
+      value: `${requiredEbN0.toFixed(1)} dB`,
+      sub: 'Umbral de confiabilidad'
+    },
+    {
+      category: 'ARCHIVO',
       label: 'Bits del archivo',
-      value: `${formatNumber(link.fileBits)}<small>${formatNumber(fileBytes)} bytes × 8</small>`
+      value: formatNumber(link.fileBits),
+      sub: `${formatNumber(fileBytes)} bytes × 8`
     },
     {
-      label: 'Símbolos transmitidos',
-      value: `${formatNumber(link.fileSymbols)}<small>bits ÷ k (con BPSK: ${formatNumber(link.fileBits)})</small>`
+      category: 'TRANSMISIÓN',
+      label: 'Símbolos a enviar',
+      value: formatNumber(link.fileSymbols),
+      sub: `bits ÷ k (con BPSK: ${formatNumber(link.fileBits)})`
     },
     {
+      category: 'LATENCIA',
       label: 'Tiempo de transmisión',
-      value: `${formatDuration(link.transmissionTimeSec)}<small>bits ÷ Rb</small>`
+      value: formatDuration(link.transmissionTimeSec),
+      sub: 'Ideal sin overhead (bits ÷ Rb)'
     }
   ];
 
-  // Renderizado eficiente de las tarjetas
+  // Construcción del deck de métricas
   const fragment = document.createDocumentFragment();
-  for (const card of cards) {
+  for (const card of cardsData) {
     const cardEl = document.createElement('div');
-    const labelEl = document.createElement('small');
-    labelEl.textContent = card.label;
-    const valueEl = document.createElement('b');
-    valueEl.innerHTML = card.value;
-    cardEl.appendChild(labelEl);
+    cardEl.className = 'metric-card';
+
+    const labelContainer = document.createElement('div');
+    labelContainer.className = 'metric-label';
+    labelContainer.innerHTML = `<span>${card.label}</span><span style="font-size:0.68rem;opacity:0.7">${card.category}</span>`;
+
+    const valueEl = document.createElement('div');
+    valueEl.className = 'metric-value';
+    valueEl.textContent = card.value;
+
+    const subEl = document.createElement('small');
+    subEl.className = 'metric-sub';
+    subEl.textContent = card.sub;
+
+    cardEl.appendChild(labelContainer);
     cardEl.appendChild(valueEl);
+    cardEl.appendChild(subEl);
     fragment.appendChild(cardEl);
   }
 
   metricsContainer.replaceChildren(fragment);
 
-  // Generación del mensaje pedagógico explicativo
-  let msg = `Con ${scheme.name} se envían ${k} bit${k > 1 ? 's' : ''} por símbolo y se necesita aproximadamente ${requiredEbN0.toFixed(1)} dB de Eb/N0 para llegar a BER 10⁻⁵. `;
-  msg += g < requiredEbN0
-    ? 'Estás por debajo de ese valor, por eso aparecen errores (puntos rojos).'
-    : 'Estás por encima de ese valor: el enlace es fiable.';
+  // Panel de Diagnóstico Pedagógico
+  const statusIcon = isReliable ? '✓' : '⚠';
+  const statusBadge = isReliable ? 'ENLACE FIABLE' : 'ENLACE DEGRADADO POR RUIDO';
+  const statusClass = isReliable ? 'reliable' : 'degraded';
+
+  messageElement.className = `glass-panel diagnostic-panel ${statusClass}`;
+
+  let explanation = `<strong>[${statusBadge}]</strong> Con <strong>${scheme.name}</strong> se envían <strong>${k} bit${k > 1 ? 's' : ''}</strong> por símbolo y se requieren aproximadamente <strong>${requiredEbN0.toFixed(1)} dB</strong> de $E_b/N_0$ para asegurar una BER de $10^{-5}$. `;
+
+  if (isReliable) {
+    explanation += `La relación de señal actual (${g.toFixed(1)} dB) está <strong>por encima</strong> del umbral requerido: el canal opera en zona segura y libre de errores significativos.`;
+  } else {
+    explanation += `La relación actual (${g.toFixed(1)} dB) está <strong>por debajo</strong> de lo necesario: por eso la constelación muestra dispersión y aparecen puntos rojos de decisión errónea.`;
+  }
 
   if (simulationResult.be === 0) {
-    msg += ' No hubo errores en esta simulación; aumenta los símbolos o baja Eb/N0 para observarlos.';
+    explanation += ' No se detectaron errores en esta muestra puntual; puedes aumentar el número de símbolos simulados o reducir el $E_b/N_0$ para visualizar la tasa empírica.';
   }
-  msg += ` Para el archivo de ${formatNumber(fileBytes)} bytes se transmiten unos ${formatNumber(link.fileSymbols)} símbolos en ${formatDuration(link.transmissionTimeSec)}.`;
-  msg += ' Prueba cambiar a 64-QAM: el ancho de banda baja, pero necesitas mucha más potencia.';
 
-  messageElement.textContent = msg;
+  explanation += ` Transmitir este archivo de ${formatNumber(fileBytes)} bytes requerirá <strong>${formatNumber(link.fileSymbols)} símbolos</strong> completándose en <strong>${formatDuration(link.transmissionTimeSec)}</strong>.`;
+
+  messageElement.innerHTML = `
+    <div class="diagnostic-icon" style="color: ${isReliable ? 'var(--ok)' : 'var(--er)'}">${statusIcon}</div>
+    <div class="diagnostic-text">${explanation}</div>
+  `;
 }

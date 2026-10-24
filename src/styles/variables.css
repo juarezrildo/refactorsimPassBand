@@ -3,49 +3,100 @@
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* Paleta Tema Claro */
-  --bg: #eef3f5;
-  --card: #fbfdfd;
-  --tx: #12232e;
-  --mut: #5a6d78;
-  --bd: #cdd9de;
-  --ac: #0e7c86;
-  --ac-hover: #0a5f67;
-  --er: #d1344b;
-  --grid: #dbe5e9;
+  /* Paleta Tema Oscuro (Por defecto para estética de ingeniería Pro Max) */
+  --bg-gradient: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(14, 124, 134, 0.25), rgba(10, 15, 20, 0.95)),
+                 radial-gradient(circle at 10% 30%, rgba(56, 195, 207, 0.08), transparent 40%),
+                 radial-gradient(circle at 90% 70%, rgba(139, 63, 196, 0.08), transparent 40%),
+                 #0a0f14;
+  --bg: #0a0f14;
+  --bg-alt: #0e161f;
+  
+  /* Liquid Glass Tokens */
+  --glass-bg: rgba(16, 25, 34, 0.65);
+  --glass-bg-hover: rgba(22, 34, 46, 0.75);
+  --glass-card: rgba(18, 28, 38, 0.6);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-focus: rgba(56, 195, 207, 0.5);
+  --glass-inner-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --glass-blur: blur(20px) saturate(180%);
 
+  /* Tipografía y Colores */
+  --tx: #f0f6f8;
+  --tx-secondary: #9db2be;
+  --tx-muted: #5e7685;
+  --bd: rgba(255, 255, 255, 0.1);
+  --bd-subtle: rgba(255, 255, 255, 0.05);
+
+  /* Acentos Vibrantes */
+  --ac: #00d2df;
+  --ac-glow: rgba(0, 210, 223, 0.35);
+  --ac-hover: #33e0eb;
+  --ac-dim: rgba(0, 210, 223, 0.12);
+  --er: #ff4766;
+  --er-glow: rgba(255, 71, 102, 0.4);
+  --ok: #10b981;
+  --ok-glow: rgba(16, 185, 129, 0.35);
+  --warn: #f59e0b;
+
+  /* Canvas y Gráficos */
+  --grid: rgba(255, 255, 255, 0.06);
+  --grid-axis: rgba(255, 255, 255, 0.2);
+  --canvas-bg: #080c10;
+  
   /* Curvas BER */
-  --curve-qpsk: #0e7c86;
-  --curve-psk8: #4f8f2f;
-  --curve-qam16: #d97706;
-  --curve-qam64: #8b3fc4;
+  --curve-qpsk: #00d2df;
+  --curve-psk8: #10b981;
+  --curve-qam16: #f59e0b;
+  --curve-qam64: #a855f7;
 
-  --font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Fuentes y Animaciones */
+  --font-sans: "Plus Jakarta Sans", "Atkinson Hyperlegible", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --transition-spring: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-fast: 0.15s ease;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e1a20;
-    --card: #14252d;
-    --tx: #e6f0f3;
-    --mut: #93a8b3;
-    --bd: #274049;
-    --ac: #38c3cf;
-    --ac-hover: #4de0ee;
-    --er: #ff7088;
-    --grid: #1f343d;
-  }
-}
+[data-theme="light"] {
+  --bg-gradient: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(14, 124, 134, 0.15), rgba(240, 244, 248, 0.95)),
+                 radial-gradient(circle at 10% 30%, rgba(0, 210, 223, 0.08), transparent 40%),
+                 radial-gradient(circle at 90% 70%, rgba(168, 85, 247, 0.06), transparent 40%),
+                 #f0f4f8;
+  --bg: #f0f4f8;
+  --bg-alt: #ffffff;
 
-:root[data-theme="dark"] {
-  --bg: #0e1a20;
-  --card: #14252d;
-  --tx: #e6f0f3;
-  --mut: #93a8b3;
-  --bd: #274049;
-  --ac: #38c3cf;
-  --ac-hover: #4de0ee;
-  --er: #ff7088;
-  --grid: #1f343d;
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-bg-hover: rgba(255, 255, 255, 0.9);
+  --glass-card: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-border-focus: rgba(14, 124, 134, 0.5);
+  --glass-inner-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+
+  --tx: #0e1e28;
+  --tx-secondary: #4b6371;
+  --tx-muted: #829aa8;
+  --bd: rgba(0, 0, 0, 0.1);
+  --bd-subtle: rgba(0, 0, 0, 0.05);
+
+  --ac: #0e7c86;
+  --ac-glow: rgba(14, 124, 134, 0.25);
+  --ac-hover: #0b6169;
+  --ac-dim: rgba(14, 124, 134, 0.1);
+  --er: #e11d48;
+  --er-glow: rgba(225, 29, 72, 0.25);
+  --ok: #059669;
+  --ok-glow: rgba(5, 150, 105, 0.25);
+  --warn: #d97706;
+
+  --grid: rgba(0, 0, 0, 0.07);
+  --grid-axis: rgba(0, 0, 0, 0.25);
+  --canvas-bg: #f8fafc;
+
+  --curve-qpsk: #0e7c86;
+  --curve-psk8: #059669;
+  --curve-qam16: #d97706;
+  --curve-qam64: #9333ea;
 }

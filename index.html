@@ -1,102 +1,206 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Simulador de modulaciones digitales paso banda</title>
+  <title>Simulador de Modulaciones Digitales Paso Banda — UPDS</title>
+  
+  <!-- Tipografía Profesional: Plus Jakarta Sans y JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <link rel="stylesheet" href="/src/styles/main.css">
 </head>
 <body>
   <main>
-    <header>
-      <h1>Simulador de modulaciones digitales paso banda</h1>
-      <p class="sub">Elige una modulación y cambia el ruido. Los puntos son los símbolos recibidos; los rojos son errores de decisión. Observa cómo cambian la BER, el ancho de banda y la eficiencia.</p>
+    <!-- Encabezado Pro Max con Insignia y Selector de Tema -->
+    <header class="header">
+      <div class="header-brand">
+        <div class="title-badge-row">
+          <div class="title-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12h2.5L8 4l7 16 3.5-8H22"></path>
+            </svg>
+          </div>
+          <h1>Simulador de Modulaciones Paso Banda</h1>
+          <span class="badge-tag">
+            <span class="badge-pulse"></span>
+            Canal AWGN
+          </span>
+          <span class="badge-tag" style="background: rgba(16, 185, 129, 0.12); color: var(--ok);">
+            v1.1 Core
+          </span>
+        </div>
+        <p class="sub">
+          Plataforma interactiva de simulación Monte Carlo para comunicaciones digitales coherentes en banda base equivalente. Visualiza constelaciones complejas I/Q, curvas analíticas de BER y balance de enlace en tiempo real.
+        </p>
+      </div>
+
+      <div class="header-actions">
+        <!-- Botón Alternar Tema -->
+        <button id="theme-toggle" class="btn-icon" type="button" title="Alternar tema claro/oscuro" aria-label="Alternar tema">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
     </header>
 
-    <!-- Panel de Controles -->
-    <section class="card ctl" aria-label="Controles de simulación">
-      <div>
-        <label for="mod">Modulación</label>
-        <select id="mod">
-          <option>BPSK</option>
-          <option selected>QPSK</option>
-          <option>8-PSK</option>
-          <option>16-QAM</option>
-          <option>64-QAM</option>
-        </select>
+    <!-- Panel de Controles Liquid Glass con Selector Segmentado (Emil Kowalski Style) -->
+    <section class="glass-panel ctl-panel" aria-label="Panel de configuración de simulación">
+      <div class="panel-header">
+        <span class="panel-title">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+          Esquema de Modulación Digital
+        </span>
+        <span style="font-size: 0.8rem; color: var(--tx-muted);">Mapeo Gray & Detección Coherente</span>
       </div>
 
-      <div>
-        <label for="snr">Eb/N0: <span class="val" id="snrv">8</span> dB</label>
-        <input type="range" id="snr" min="0" max="20" step="0.5" value="8">
+      <!-- Segmented Control Pills -->
+      <div class="segmented-control" role="tablist" aria-label="Selección de Modulación">
+        <button type="button" class="segmented-btn" data-mod="BPSK" role="tab">BPSK (1 bit)</button>
+        <button type="button" class="segmented-btn active" data-mod="QPSK" role="tab">QPSK (2 bits)</button>
+        <button type="button" class="segmented-btn" data-mod="8-PSK" role="tab">8-PSK (3 bits)</button>
+        <button type="button" class="segmented-btn" data-mod="16-QAM" role="tab">16-QAM (4 bits)</button>
+        <button type="button" class="segmented-btn" data-mod="64-QAM" role="tab">64-QAM (6 bits)</button>
       </div>
 
-      <div>
-        <label for="n">Símbolos simulados</label>
-        <select id="n">
-          <option value="1000">1 000</option>
-          <option value="5000">5 000</option>
-          <option value="20000" selected>20 000</option>
-          <option value="100000">100 000</option>
-        </select>
-      </div>
+      <!-- Select oculto para accesibilidad y sincronización de estado -->
+      <select id="mod" style="display: none;" aria-hidden="true">
+        <option value="BPSK">BPSK</option>
+        <option value="QPSK" selected>QPSK</option>
+        <option value="8-PSK">8-PSK</option>
+        <option value="16-QAM">16-QAM</option>
+        <option value="64-QAM">64-QAM</option>
+      </select>
 
-      <div>
-        <label for="rb">Tasa de bits Rb (kbit/s)</label>
-        <input type="number" id="rb" value="1000" min="1" step="100">
-      </div>
+      <!-- Grilla de Parámetros -->
+      <div class="ctl-grid">
+        <!-- Eb/N0 -->
+        <div class="field-group">
+          <label for="snr">
+            <span>Relación Eb/N0</span>
+            <span class="val-badge" id="snrv">8 dB</span>
+          </label>
+          <div class="slider-container">
+            <input type="range" id="snr" min="0" max="20" step="0.5" value="8" aria-label="Eb/N0 en dB">
+          </div>
+        </div>
 
-      <div>
-        <label for="al">Roll-off α: <span class="val" id="alv">0.35</span></label>
-        <input type="range" id="al" min="0" max="1" step="0.05" value="0.35">
-      </div>
-
-      <div>
-        <label for="fs">Archivo a transmitir</label>
-        <div style="display: flex; gap: 6px;">
-          <input type="number" id="fs" value="10" min="0" step="1">
-          <select id="fu" style="width: 90px;">
-            <option value="1000">KB</option>
-            <option value="1000000" selected>MB</option>
-            <option value="1000000000">GB</option>
+        <!-- Símbolos simulados -->
+        <div class="field-group">
+          <label for="n">
+            <span>Símbolos simulados (N)</span>
+          </label>
+          <select id="n">
+            <option value="1000">1 000 símbolos</option>
+            <option value="5000">5 000 símbolos</option>
+            <option value="20000" selected>20 000 símbolos</option>
+            <option value="100000">100 000 símbolos</option>
           </select>
+        </div>
+
+        <!-- Tasa de bits Rb -->
+        <div class="field-group">
+          <label for="rb">
+            <span>Tasa de bits Rb</span>
+            <span style="font-size: 0.75rem; color: var(--tx-muted);">kbit/s</span>
+          </label>
+          <input type="number" id="rb" value="1000" min="1" step="100">
+        </div>
+
+        <!-- Roll-off alpha -->
+        <div class="field-group">
+          <label for="al">
+            <span>Roll-off del pulso α</span>
+            <span class="val-badge" id="alv">0.35</span>
+          </label>
+          <div class="slider-container">
+            <input type="range" id="al" min="0" max="1" step="0.05" value="0.35" aria-label="Factor roll-off alpha">
+          </div>
+        </div>
+
+        <!-- Archivo a transmitir -->
+        <div class="field-group">
+          <label for="fs">
+            <span>Archivo a transmitir</span>
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <input type="number" id="fs" value="10" min="0" step="1" style="flex: 1;">
+            <select id="fu" style="width: 95px;">
+              <option value="1000">KB</option>
+              <option value="1000000" selected>MB</option>
+              <option value="1000000000">GB</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Semilla del ruido -->
+        <div class="field-group">
+          <label for="sd">
+            <span>Semilla PRNG</span>
+          </label>
+          <input type="number" id="sd" value="1" min="1" step="1">
+        </div>
+
+        <!-- Botón Generar Ruido -->
+        <div class="field-group">
+          <button id="re" class="btn-primary" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            Nuevo Ruido
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visualizaciones Gráficas Dobles -->
+    <section class="g" aria-label="Visualizaciones gráficas en tiempo real">
+      <!-- Constelación I/Q -->
+      <div class="glass-panel viz-card">
+        <div class="viz-header">
+          <h2 class="viz-title">Constelación Recibida (Plano I/Q)</h2>
+          <span class="viz-badge">Muestras: 2 000 puntos</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="cc" role="img" aria-label="Diagrama de constelación en el plano en fase y cuadratura"></canvas>
         </div>
       </div>
 
-      <div>
-        <label for="sd">Semilla del ruido</label>
-        <input type="number" id="sd" value="1" min="1" step="1">
-      </div>
-
-      <div style="align-self: end;">
-        <button id="re" type="button">Generar nuevo ruido</button>
-      </div>
-    </section>
-
-    <!-- Gráficos Interactivos -->
-    <section class="g" aria-label="Visualizaciones gráficas">
-      <div class="card">
-        <h2>Constelación recibida (plano I/Q)</h2>
-        <canvas id="cc" role="img" aria-label="Constelación recibida con ruido"></canvas>
-      </div>
-      <div class="card">
-        <h2>BER vs Eb/N0 (teoría y simulación)</h2>
-        <canvas id="cb" role="img" aria-label="Curvas de tasa de error de bit contra Eb/N0"></canvas>
+      <!-- Curvas de BER -->
+      <div class="glass-panel viz-card">
+        <div class="viz-header">
+          <h2 class="viz-title">BER vs Eb/N0 (Teoría vs Simulación)</h2>
+          <span class="viz-badge">AWGN Coherente</span>
+        </div>
+        <div class="canvas-wrapper">
+          <canvas id="cb" role="img" aria-label="Curvas analíticas y empíricas de BER contra relación señal a ruido Eb/N0"></canvas>
+        </div>
       </div>
     </section>
 
-    <!-- Grilla de Métricas de Enlace -->
-    <section class="m" id="mt" aria-label="Métricas del sistema"></section>
+    <!-- Deck de Métricas e Indicadores Clave de Enlace -->
+    <section class="metrics-grid" id="mt" aria-label="Métricas del enlace de comunicaciones"></section>
 
-    <!-- Mensaje Pedagógico Dinámico -->
-    <p class="card" id="msg"></p>
+    <!-- Panel de Diagnóstico Pedagógico Dinámico -->
+    <div class="glass-panel diagnostic-panel" id="msg" role="status" aria-live="polite"></div>
 
-    <!-- Nota Técnica al Pie -->
-    <footer class="note">
-      Con la misma semilla y los mismos parámetros, el ruido y los resultados son idénticos en cualquier computadora. El conteo de símbolos y el tiempo son ideales: no incluyen cabeceras, codificación de canal ni retransmisiones, por lo que en un enlace real serán algo mayores. Canal AWGN, detección coherente, mapeo Gray y energía media por símbolo normalizada. La curva teórica de 8-PSK y de QAM usa aproximaciones válidas para BER no muy altas. Material de apoyo de la guía “Transmisión Digital Paso Banda”.
+    <!-- Pie Técnico -->
+    <footer class="footer-note">
+      Determinismo garantizado: con la misma semilla y parámetros, el ruido es 100% reproducible en cualquier plataforma. El conteo de símbolos y tiempos asume canal sin sobrecarga de protocolo ni codificación FEC. Material desarrollado para la asignatura Comunicaciones Digitales I (UPDS) por Rildo Jimmy Juarez Romero.
     </footer>
   </main>
 

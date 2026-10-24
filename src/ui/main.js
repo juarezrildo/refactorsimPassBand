@@ -21,7 +21,9 @@ const elements = {
   cc: $('cc'),
   cb: $('cb'),
   mt: $('mt'),
-  msg: $('msg')
+  msg: $('msg'),
+  themeToggle: $('theme-toggle'),
+  segmentedButtons: document.querySelectorAll('.segmented-btn')
 };
 
 let lastSimulationResult = null;
@@ -40,12 +42,41 @@ function readUIState() {
   };
 }
 
+/**
+ * Actualiza el relleno visual de las barras de desplazamiento (Sliders)
+ */
+function updateSliderProgress(slider) {
+  if (!slider) return;
+  const min = +slider.min || 0;
+  const max = +slider.max || 100;
+  const val = +slider.value;
+  const percent = ((val - min) / (max - min)) * 100;
+  slider.style.background = `linear-gradient(to right, var(--ac) 0%, var(--ac) ${percent}%, rgba(255,255,255,0.1) ${percent}%, rgba(255,255,255,0.1) 100%)`;
+}
+
+/**
+ * Sincroniza los botones de selección rápida de modulación (Segmented Control)
+ */
+function syncSegmentedControl(selectedMod) {
+  elements.segmentedButtons.forEach(btn => {
+    if (btn.dataset.mod === selectedMod) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
 async function updateSimulation() {
   const state = readUIState();
 
   // Actualizar valores numéricos adyacentes a sliders
-  elements.snrv.textContent = state.snr;
+  elements.snrv.textContent = `${state.snr} dB`;
   elements.alv.textContent = state.al.toFixed(2);
+
+  updateSliderProgress(elements.snr);
+  updateSliderProgress(elements.al);
+  syncSegmentedControl(state.mod);
 
   try {
     const result = await runSimulationAsync({
@@ -57,7 +88,7 @@ async function updateSimulation() {
 
     lastSimulationResult = result;
 
-    // Renderizado sincronizado con el refresco de pantalla
+    // Renderizado reactivo fluido con requestAnimationFrame
     if (animationFrameId) {
       cancelAnimationFrame(animationFrameId);
     }
@@ -72,7 +103,7 @@ async function updateSimulation() {
   }
 }
 
-// Generar nueva semilla aleatoria
+// Generar nueva semilla pseudoaleatoria
 function regenerateNoise() {
   elements.sd.value = Math.floor(Math.random() * 99999) + 1;
   updateSimulation();
@@ -86,15 +117,37 @@ function redrawOnly() {
   }
 }
 
-// Listeners
+// Alternar tema claro / oscuro
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  redrawOnly();
+}
+
+// Listeners de controles de entrada
 ['mod', 'snr', 'n', 'rb', 'al', 'fs', 'fu', 'sd'].forEach(id => {
   elements[id]?.addEventListener('input', updateSimulation);
 });
 
+// Eventos de botones de selección de modulación (Segmented Pills)
+elements.segmentedButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mod = btn.dataset.mod;
+    if (mod && elements.mod.value !== mod) {
+      elements.mod.value = mod;
+      updateSimulation();
+    }
+  });
+});
+
 elements.re?.addEventListener('click', regenerateNoise);
+elements.themeToggle?.addEventListener('click', toggleTheme);
 
 window.addEventListener('resize', redrawOnly);
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', redrawOnly);
 
-// Inicialización
+// Inicialización inicial
+updateSliderProgress(elements.snr);
+updateSliderProgress(elements.al);
 updateSimulation();
