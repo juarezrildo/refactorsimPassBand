@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulador de modulaciones digitales paso banda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef3f5;--card:#fbfdfd;--tx:#12232e;--mut:#5a6d78;--bd:#cdd9de;--ac:#0e7c86;--er:#d1344b;--grid:#dbe5e9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a20;--card:#14252d;--tx:#e6f0f3;--mut:#93a8b3;--bd:#274049;--ac:#38c3cf;--er:#ff7088;--grid:#1f343d}}
+:root[data-theme="dark"]{--bg:#0e1a20;--card:#14252d;--tx:#e6f0f3;--mut:#93a8b3;--bd:#274049;--ac:#38c3cf;--er:#ff7088;--grid:#1f343d}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1000px;margin:0 auto;padding:20px 14px 40px}
+h1{font-size:1.5rem;margin:0 0 4px;line-height:1.25}
+.sub{color:var(--mut);margin:0 0 16px;max-width:62ch}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:12px}
+label{display:block;font-weight:700;font-size:.9rem;margin-bottom:4px}
+select,input[type=number]{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--tx);font:inherit}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.val{color:var(--ac);font-weight:700}
+button{padding:9px 14px;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:6px;font:inherit;font-weight:700;cursor:pointer}
+:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:720px){.g{grid-template-columns:1fr}}
+.g h2{font-size:1rem;margin:0 0 8px}
+canvas{width:100%;aspect-ratio:1/1;display:block}
+.m{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.m div{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px}
+.m small{display:block;color:var(--mut);font-size:.8rem}
+.m b{font-size:1.15rem}
+#msg{margin:0;border-left:4px solid var(--ac)}
+.note{color:var(--mut);font-size:.85rem;margin-top:12px}
+</style>
+</head>
+<body>
+<main>
+<h1>Simulador de modulaciones digitales paso banda</h1>
+<p class="sub">Elige una modulación y cambia el ruido. Los puntos son los símbolos recibidos; los rojos son errores de decisión. Observa cómo cambian la BER, el ancho de banda y la eficiencia.</p>
+
+<div class="card ctl">
+  <div><label for="mod">Modulación</label>
+    <select id="mod"><option>BPSK</option><option selected>QPSK</option><option>8-PSK</option><option>16-QAM</option><option>64-QAM</option></select></div>
+  <div><label for="snr">Eb/N0: <span class="val" id="snrv"></span> dB</label>
+    <input type="range" id="snr" min="0" max="20" step="0.5" value="8"></div>
+  <div><label for="n">Símbolos simulados</label>
+    <select id="n"><option value="1000">1 000</option><option value="5000">5 000</option><option value="20000" selected>20 000</option><option value="100000">100 000</option></select></div>
+  <div><label for="rb">Tasa de bits Rb (kbit/s)</label><input type="number" id="rb" value="1000" min="1" step="100"></div>
+  <div><label for="al">Roll-off α: <span class="val" id="alv"></span></label>
+    <input type="range" id="al" min="0" max="1" step="0.05" value="0.35"></div>
+  <div><label for="fs">Archivo a transmitir</label>
+    <div style="display:flex;gap:6px"><input type="number" id="fs" value="10" min="0" step="1"><select id="fu" style="width:90px"><option value="1000">KB</option><option value="1000000" selected>MB</option><option value="1000000000">GB</option></select></div></div>
+  <div><label for="sd">Semilla del ruido</label><input type="number" id="sd" value="1" min="1" step="1"></div>
+  <div style="align-self:end"><button id="re" type="button">Generar nuevo ruido</button></div>
+</div>
+
+<div class="g">
+  <div class="card"><h2>Constelación recibida (plano I/Q)</h2><canvas id="cc" role="img" aria-label="Constelación recibida con ruido"></canvas></div>
+  <div class="card"><h2>BER vs Eb/N0 (teoría y simulación)</h2><canvas id="cb" role="img" aria-label="Curvas de tasa de error de bit contra Eb/N0"></canvas></div>
+</div>
+
+<div class="m" id="mt"></div>
+<p class="card" id="msg"></p>
+<p class="note">Con la misma semilla y los mismos parámetros, el ruido y los resultados son idénticos en cualquier computadora. El conteo de símbolos y el tiempo son ideales: no incluyen cabeceras, codificación de canal ni retransmisiones, por lo que en un enlace real serán algo mayores. Canal AWGN, detección coherente, mapeo Gray y energía media por símbolo normalizada. La curva teórica de 8-PSK y de QAM usa aproximaciones válidas para BER no muy altas. Material de apoyo de la guía “Transmisión Digital Paso Banda”.</p>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const MODS={'BPSK':2,'QPSK':4,'8-PSK':8,'16-QAM':16,'64-QAM':64};
+const gray=n=>n^(n>>1);
+const pop=n=>{let c=0;while(n){c+=n&1;n>>=1}return c};
+function erfc(x){const z=Math.abs(x),t=1/(1+0.3275911*z);const r=t*(0.254829592+t*(-0.284496736+t*(1.421413741+t*(-1.453152027+t*1.061405429))))*Math.exp(-z*z);return x>=0?r:2-r}
+const Q=x=>0.5*erfc(x/Math.SQRT2);
+function build(name){
+  const M=MODS[name],k=Math.log2(M),p=[];
+  if(name==='BPSK'){p.push({x:1,y:0,l:0},{x:-1,y:0,l:1})}
+  else if(name==='QAM'||name.indexOf('QAM')>0){
+    const L=Math.sqrt(M),h=k/2,s=1/Math.sqrt(2*(M-1)/3);
+    for(let i=0;i<L;i++)for(let j=0;j<L;j++)p.push({x:(2*i-(L-1))*s,y:(2*j-(L-1))*s,l:(gray(i)<<h)|gray(j)});
+  } else {
+    const off=M===4?Math.PI/4:0;
+    for(let i=0;i<M;i++)p.push({x:Math.cos(2*Math.PI*i/M+off),y:Math.sin(2*Math.PI*i/M+off),l:gray(i)});
+  }
+  return {M,k,p};
+}
+function theory(name,gdb){
+  const g=Math.pow(10,gdb/10),M=MODS[name],k=Math.log2(M);
+  if(M<=4)return Q(Math.sqrt(2*g));
+  if(name==='8-PSK')return Math.min(.5,2*Q(Math.sqrt(2*k*g)*Math.sin(Math.PI/M))/k);
+  return Math.min(.5,(4/k)*(1-1/Math.sqrt(M))*Q(Math.sqrt(3*k*g/(M-1))));
+}
+let rnd=Math.random;
+function mk(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(){return Math.sqrt(-2*Math.log(1-rnd()))*Math.cos(2*Math.PI*rnd())}
+function simulate(name,gdb,N){
+  rnd=mk(+$('sd').value||1);
+  const c=build(name),g=Math.pow(10,gdb/10),sd=Math.sqrt((1/c.k)/g/2);
+  let be=0,se=0;const dots=[];
+  for(let n=0;n<N;n++){
+    const t=c.p[(rnd()*c.M)|0],x=t.x+sd*gauss(),y=t.y+sd*gauss();
+    let b=c.p[0],bd=1e9;
+    for(const q of c.p){const d=(q.x-x)*(q.x-x)+(q.y-y)*(q.y-y);if(d<bd){bd=d;b=q}}
+    const e=pop(b.l^t.l);be+=e;if(e)se++;
+    if(n<2000)dots.push({x,y,e:e>0});
+  }
+  return {be,se,N,bits:N*c.k,dots,c};
+}
+function needed(name,target){let lo=0,hi=40;for(let i=0;i<40;i++){const m=(lo+hi)/2;theory(name,m)>target?lo=m:hi=m}return hi}
+const sup=s=>s.replace('+','').replace(/[-0-9]/g,c=>'⁻⁰¹²³⁴⁵⁶⁷⁸⁹'['-0123456789'.indexOf(c)]);
+const sci=p=>{if(p===0)return '0';const[m,e]=p.toExponential(1).split('e');return m+'×10'+sup(e)};
+const fh=h=>h>=1e6?(h/1e6).toFixed(2)+' MHz':h>=1e3?(h/1e3).toFixed(1)+' kHz':h.toFixed(0)+' Hz';
+const fn=n=>n>=1e9?(n/1e9).toFixed(2)+' mil millones':n>=1e6?(n/1e6).toFixed(2)+' millones':Math.round(n).toLocaleString('es');
+const ft=s=>s<1e-3?(s*1e6).toFixed(1)+' µs':s<1?(s*1e3).toFixed(1)+' ms':s<60?s.toFixed(2)+' s':(s/60).toFixed(2)+' min';
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function fit(c){const r=c.getBoundingClientRect(),d=window.devicePixelRatio||1;c.width=r.width*d;c.height=r.height*d;const x=c.getContext('2d');x.setTransform(d,0,0,d,0,0);return{w:r.width,h:r.height,x}}
+
+let S=null;
+function drawConst(){
+  const{w,h,x}=fit($('cc')),R=1.5,sx=v=>w/2+v/R*w/2,sy=v=>h/2-v/R*h/2;
+  x.clearRect(0,0,w,h);
+  x.strokeStyle=css('--grid');x.lineWidth=1;
+  for(let v=-1;v<=1;v+=.5){x.beginPath();x.moveTo(sx(v),0);x.lineTo(sx(v),h);x.moveTo(0,sy(v));x.lineTo(w,sy(v));x.stroke()}
+  x.strokeStyle=css('--mut');x.beginPath();x.moveTo(sx(0),0);x.lineTo(sx(0),h);x.moveTo(0,sy(0));x.lineTo(w,sy(0));x.stroke();
+  x.fillStyle=css('--mut');x.font='12px sans-serif';x.fillText('I',w-12,sy(0)-5);x.fillText('Q',sx(0)+5,12);
+  x.save();x.beginPath();x.rect(0,0,w,h);x.clip();
+  for(const d of S.dots){x.fillStyle=d.e?css('--er'):css('--ac');x.globalAlpha=d.e?.9:.4;x.beginPath();x.arc(sx(d.x),sy(d.y),d.e?2.8:2.2,0,6.283);x.fill()}
+  x.restore();x.globalAlpha=1;
+  const c=S.c;x.strokeStyle=css('--tx');x.lineWidth=1.5;x.fillStyle=css('--tx');x.font='11px sans-serif';
+  for(const q of c.p){x.beginPath();x.arc(sx(q.x),sy(q.y),5,0,6.283);x.stroke();
+    if(c.M<=16){x.fillText(q.l.toString(2).padStart(c.k,'0'),sx(q.x)+7,sy(q.y)-7)}}
+}
+const COL=['#0e7c86','#4f8f2f','#d97706','#8b3fc4'];
+const CURVES=[['BPSK / QPSK','QPSK'],['8-PSK','8-PSK'],['16-QAM','16-QAM'],['64-QAM','64-QAM']];
+function drawBER(g,th){
+  const{w,h,x}=fit($('cb')),l=46,r=10,t=10,b=34,X=v=>l+v/20*(w-l-r),Y=p=>t+(-Math.log10(Math.max(p,1e-6))/6)*(h-t-b);
+  x.clearRect(0,0,w,h);x.font='11px sans-serif';x.lineWidth=1;
+  for(let e=0;e<=6;e++){x.strokeStyle=css('--grid');x.beginPath();x.moveTo(l,Y(Math.pow(10,-e)));x.lineTo(w-r,Y(Math.pow(10,-e)));x.stroke();x.fillStyle=css('--mut');x.fillText('10'+sup('-'+e),4,Y(Math.pow(10,-e))+4)}
+  for(let v=0;v<=20;v+=5){x.strokeStyle=css('--grid');x.beginPath();x.moveTo(X(v),t);x.lineTo(X(v),h-b);x.stroke();x.fillStyle=css('--mut');x.fillText(v,X(v)-5,h-b+14)}
+  x.fillStyle=css('--mut');x.fillText('Eb/N0 (dB)',w/2-25,h-6);
+  const sel=S.name==='BPSK'?'QPSK':S.name;
+  CURVES.forEach((cv,i)=>{
+    const on=cv[1]===sel;x.strokeStyle=COL[i];x.lineWidth=on?3:1.3;x.globalAlpha=on?1:.55;x.beginPath();
+    for(let v=0;v<=20;v+=.25){const p=theory(cv[1],v);if(p<1e-6){x.lineTo(X(v),Y(1e-6));break}v===0?x.moveTo(X(v),Y(p)):x.lineTo(X(v),Y(p))}
+    x.stroke();x.globalAlpha=1;x.fillStyle=COL[i];x.fillText(cv[0],l+8,h-b-8-(3-i)*14);
+  });
+  x.setLineDash([4,4]);x.strokeStyle=css('--tx');x.lineWidth=1;x.beginPath();x.moveTo(X(g),t);x.lineTo(X(g),h-b);x.stroke();x.setLineDash([]);
+  x.fillStyle=css('--tx');x.beginPath();x.arc(X(g),Y(th),5,0,6.283);x.fill();
+  const sb=S.be/S.bits;
+  if(sb>0){x.strokeStyle=css('--er');x.lineWidth=2.5;x.beginPath();x.arc(X(g),Y(sb),8,0,6.283);x.stroke()}
+  else{x.fillStyle=css('--er');x.fillText('0 errores',X(g)+8,h-b-6)}
+}
+function update(){
+  const name=$('mod').value,g=+$('snr').value,N=+$('n').value,rb=+$('rb').value*1e3,al=+$('al').value;
+  $('snrv').textContent=g;$('alv').textContent=al.toFixed(2);
+  const sm=simulate(name,g,N);sm.name=name;S=sm;
+  const k=sm.c.k,rs=rb/k,B=rs*(1+al),th=theory(name,g),sb=sm.be/sm.bits;
+  const need=needed(name,1e-5);
+  const by=(+$('fs').value||0)*+$('fu').value,fb=by*8,fsy=fb/k,ftm=fb/rb;
+  const cards=[['Bits por símbolo (k)',k],['Tasa de símbolos Rs',fh(rs).replace('Hz','símb/s').replace('kHz','ksímb/s').replace('MHz','Msímb/s')],['Ancho de banda B',fh(B)],['Eficiencia espectral',(k/(1+al)).toFixed(2)+' bit/s/Hz'],['Es/N0',(g+10*Math.log10(k)).toFixed(1)+' dB'],['BER teórica',sci(th)],['BER simulada',sci(sb)+'<small>'+sm.be+' errores en '+sm.bits+' bits</small>'],['Errores de símbolo',(100*sm.se/N).toFixed(2)+' %'],['Eb/N0 para BER 10⁻⁵',need.toFixed(1)+' dB'],['Bits del archivo',fn(fb)+'<small>'+fn(by)+' bytes × 8</small>'],['Símbolos transmitidos',fn(fsy)+'<small>bits ÷ k (con BPSK: '+fn(fb)+')</small>'],['Tiempo de transmisión',ft(ftm)+'<small>bits ÷ Rb</small>']];
+  $('mt').innerHTML=cards.map(c=>'<div><small>'+c[0]+'</small><b>'+c[1]+'</b></div>').join('');
+  let m='Con '+name+' se envían '+k+' bit'+(k>1?'s':'')+' por símbolo y se necesita aproximadamente '+need.toFixed(1)+' dB de Eb/N0 para llegar a BER 10⁻⁵. ';
+  m+=g<need?'Estás por debajo de ese valor, por eso aparecen errores (puntos rojos).':'Estás por encima de ese valor: el enlace es fiable.';
+  if(sm.be===0)m+=' No hubo errores en esta simulación; aumenta los símbolos o baja Eb/N0 para observarlos.';
+  m+=' Para el archivo de '+fn(by)+' bytes se transmiten unos '+fn(fsy)+' símbolos en '+ft(ftm)+'.';
+  m+=' Prueba cambiar a 64-QAM: el ancho de banda baja, pero necesitas mucha más potencia.';
+  $('msg').textContent=m;
+  drawConst();drawBER(g,th);
+}
+['mod','snr','n','rb','al','fs','fu','sd'].forEach(i=>$(i).addEventListener('input',update));
+$('re').addEventListener('click',()=>{$('sd').value=Math.floor(Math.random()*99999)+1;update()});
+addEventListener('resize',()=>{if(S){drawConst();drawBER(+$('snr').value,theory($('mod').value,+$('snr').value))}});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(S){drawConst();drawBER(+$('snr').value,theory($('mod').value,+$('snr').value))}});
+update();
+</script>
+</body>
+</html>

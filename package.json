@@ -1,0 +1,30 @@
+{
+  "name": "simulador-modulaciones-paso-banda",
+  "version": "1.0.0",
+  "description": "Simulador interactivo de modulaciones digitales paso banda (BPSK, QPSK, 8-PSK, 16-QAM, 64-QAM) sobre canal AWGN",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "golden": "node scripts/generate_golden.js"
+  },
+  "keywords": [
+    "comunicaciones-digitales",
+    "modulacion-digital",
+    "paso-banda",
+    "awgn",
+    "ber",
+    "bpsk",
+    "qpsk",
+    "qam"
+  ],
+  "author": "Rildo Jimmy Juarez Romero",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
+  }
+}
