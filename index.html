@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Simulador de modulaciones digitales paso banda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Simulador de modulaciones digitales paso banda</h1>
+      <p class="sub">Elige una modulación y cambia el ruido. Los puntos son los símbolos recibidos; los rojos son errores de decisión. Observa cómo cambian la BER, el ancho de banda y la eficiencia.</p>
+    </header>
+
+    <!-- Panel de Controles -->
+    <section class="card ctl" aria-label="Controles de simulación">
+      <div>
+        <label for="mod">Modulación</label>
+        <select id="mod">
+          <option>BPSK</option>
+          <option selected>QPSK</option>
+          <option>8-PSK</option>
+          <option>16-QAM</option>
+          <option>64-QAM</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="snr">Eb/N0: <span class="val" id="snrv">8</span> dB</label>
+        <input type="range" id="snr" min="0" max="20" step="0.5" value="8">
+      </div>
+
+      <div>
+        <label for="n">Símbolos simulados</label>
+        <select id="n">
+          <option value="1000">1 000</option>
+          <option value="5000">5 000</option>
+          <option value="20000" selected>20 000</option>
+          <option value="100000">100 000</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="rb">Tasa de bits Rb (kbit/s)</label>
+        <input type="number" id="rb" value="1000" min="1" step="100">
+      </div>
+
+      <div>
+        <label for="al">Roll-off α: <span class="val" id="alv">0.35</span></label>
+        <input type="range" id="al" min="0" max="1" step="0.05" value="0.35">
+      </div>
+
+      <div>
+        <label for="fs">Archivo a transmitir</label>
+        <div style="display: flex; gap: 6px;">
+          <input type="number" id="fs" value="10" min="0" step="1">
+          <select id="fu" style="width: 90px;">
+            <option value="1000">KB</option>
+            <option value="1000000" selected>MB</option>
+            <option value="1000000000">GB</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="sd">Semilla del ruido</label>
+        <input type="number" id="sd" value="1" min="1" step="1">
+      </div>
+
+      <div style="align-self: end;">
+        <button id="re" type="button">Generar nuevo ruido</button>
+      </div>
+    </section>
+
+    <!-- Gráficos Interactivos -->
+    <section class="g" aria-label="Visualizaciones gráficas">
+      <div class="card">
+        <h2>Constelación recibida (plano I/Q)</h2>
+        <canvas id="cc" role="img" aria-label="Constelación recibida con ruido"></canvas>
+      </div>
+      <div class="card">
+        <h2>BER vs Eb/N0 (teoría y simulación)</h2>
+        <canvas id="cb" role="img" aria-label="Curvas de tasa de error de bit contra Eb/N0"></canvas>
+      </div>
+    </section>
+
+    <!-- Grilla de Métricas de Enlace -->
+    <section class="m" id="mt" aria-label="Métricas del sistema"></section>
+
+    <!-- Mensaje Pedagógico Dinámico -->
+    <p class="card" id="msg"></p>
+
+    <!-- Nota Técnica al Pie -->
+    <footer class="note">
+      Con la misma semilla y los mismos parámetros, el ruido y los resultados son idénticos en cualquier computadora. El conteo de símbolos y el tiempo son ideales: no incluyen cabeceras, codificación de canal ni retransmisiones, por lo que en un enlace real serán algo mayores. Canal AWGN, detección coherente, mapeo Gray y energía media por símbolo normalizada. La curva teórica de 8-PSK y de QAM usa aproximaciones válidas para BER no muy altas. Material de apoyo de la guía “Transmisión Digital Paso Banda”.
+    </footer>
+  </main>
+
+  <script type="module" src="/src/ui/main.js"></script>
+</body>
+</html>

@@ -43,3 +43,29 @@ En este documento se registran los cambios arquitectónicos, optimizaciones y re
    - Creación de suite Vitest: `tests/golden.test.js`, `tests/unit/modulations.test.js`, `tests/unit/link.test.js`.
    - Total de 383 pruebas automatizadas pasando con éxito.
    - Medición de rendimiento en `docs/benchmarks.md` demostrando aceleración de $2.25\times$ en 64-QAM ($11.98\text{ ms}$ vs $\approx 27\text{ ms}$).
+
+---
+
+## [2026-10-24] - Pasos 4 y 5: Modularización de UI, Canvas, Web Worker y Estilos
+
+### Acciones Realizadas
+1. **Estilos Modulares (`src/styles/`)**:
+   - Separación en `variables.css` (temas claro/oscuro), `layout.css` (grillas responsivas) y `components.css`.
+2. **Renderizado en Canvas (`src/ui/canvas/`)**:
+   - `common.js`: Escalado DPI automático (`devicePixelRatio`) y lectura reactiva de variables CSS.
+   - `constellation.js`: Diagrama de constelación en plano $I/Q$.
+   - `berCurve.js`: Curvas de probabilidad de error teórica vs empírica con escala semilogarítmica.
+3. **Cálculo Asíncrono (`src/worker/`)**:
+   - `simulation.worker.js`: Web Worker para simulación fuera del hilo principal.
+   - `simulationService.js`: Despachador asíncrono con cancelación de solicitudes obsoletas y fallback transparente al hilo principal.
+4. **Métricas y Formateo (`src/ui/`)**:
+   - `formatters.js`: Formateo de tasas (Hz/símb/s), notación científica y números legibles en español.
+   - `metricsRenderer.js`: Renderizado mediante `DocumentFragment` y manipulación DOM segura.
+   - `main.js`: Controlador principal con `requestAnimationFrame`.
+5. **CI/CD**:
+   - Configuración de GitHub Actions en `.github/workflows/ci.yml`.
+   - Documentación técnica completa en `docs/modelo-fisico.md`.
+
+### Métodos de Verificación
+- Ejecución completa de Vitest: 388/388 pruebas superadas (4 archivos de test).
+- Compilación de producción con Vite (`npm run build`) completada con éxito en 241 ms.

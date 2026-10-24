@@ -1,0 +1,31 @@
+name: CI / Pruebas Automatizadas
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-build:
+    name: Ejecución de Tests y Compilación
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar Suite de Tests (Unitarios y Golden Tests)
+        run: npm test
+
+      - name: Compilar aplicación (Vite Build)
+        run: npm run build
