@@ -46,26 +46,23 @@ En este documento se registran los cambios arquitectónicos, optimizaciones y re
 
 ---
 
-## [2026-10-24] - Pasos 4 y 5: Modularización de UI, Canvas, Web Worker y Estilos
+## [2026-10-24] - Rediseño Visual Pro Max, Liquid Glass y Corrección de Curva BER
 
-### Acciones Realizadas
-1. **Estilos Modulares (`src/styles/`)**:
-   - Separación en `variables.css` (temas claro/oscuro), `layout.css` (grillas responsivas) y `components.css`.
-2. **Renderizado en Canvas (`src/ui/canvas/`)**:
-   - `common.js`: Escalado DPI automático (`devicePixelRatio`) y lectura reactiva de variables CSS.
-   - `constellation.js`: Diagrama de constelación en plano $I/Q$.
-   - `berCurve.js`: Curvas de probabilidad de error teórica vs empírica con escala semilogarítmica.
-3. **Cálculo Asíncrono (`src/worker/`)**:
-   - `simulation.worker.js`: Web Worker para simulación fuera del hilo principal.
-   - `simulationService.js`: Despachador asíncrono con cancelación de solicitudes obsoletas y fallback transparente al hilo principal.
-4. **Métricas y Formateo (`src/ui/`)**:
-   - `formatters.js`: Formateo de tasas (Hz/símb/s), notación científica y números legibles en español.
-   - `metricsRenderer.js`: Renderizado mediante `DocumentFragment` y manipulación DOM segura.
-   - `main.js`: Controlador principal con `requestAnimationFrame`.
-5. **CI/CD**:
-   - Configuración de GitHub Actions en `.github/workflows/ci.yml`.
-   - Documentación técnica completa en `docs/modelo-fisico.md`.
+### Diagnóstico de la Card Vacía
+- **Causa identificada:** Al desacoplar la simulación al Web Worker, el objeto `scheme` transferido por `postMessage` se serializa como un objeto plano sin sus métodos prototípicos (`scheme.berTheory`). Al invocar `calculateTheoreticalBER(simulationResult.scheme, g)`, fallaba silenciosamente dentro de `requestAnimationFrame`, interrumpiendo el dibujado de la gráfica BER y de las métricas.
+- **Solución:** Se refactorizó `calculateTheoreticalBER` y `calculateRequiredEbN0` para resolver el esquema siempre a través del `registry.get(name)`, garantizando que el worker pueda devolver objetos serializables sin romper la ejecución.
 
-### Métodos de Verificación
-- Ejecución completa de Vitest: 388/388 pruebas superadas (4 archivos de test).
-- Compilación de producción con Vite (`npm run build`) completada con éxito en 241 ms.
+### Overhaul Visual Aplicado
+1. **Liquid Glass & Glassmorphism Tokens:**
+   - Paneles translúcidos con `backdrop-filter: blur(20px) saturate(180%)`, bordes especulares y sombras multicapa.
+   - Fondos radiales atmosféricos con brillos de acento cian/teal.
+2. **Patrón Emil Kowalski:**
+   - Selector de modulación segmentado (*Pill tabs*) con transición suave y estado activo resaltado.
+   - Sliders de $E_b/N_0$ y $\alpha$ personalizados con pistas degradadas de progreso dinámico y thumbs brillantes.
+   - Micro-interacciones táctiles en botones y controles.
+3. **Canvas Gráfico de Alta Fidelidad (Pro Max):**
+   - **Constelación I/Q:** Círculo guía de energía $E_s = 1$, ejes con flechas y tipografía nítida, puntos correctos en cian translúcido y errores en coral brillante.
+   - **Curvas BER:** Eje logarítmico calibrado de $10^0$ a $10^{-6}$, curva activa destacada con halo, marcador vertical de $E_b/N_0$ y punto empírico.
+4. **Deck de Métricas:**
+   - 12 tarjetas KPI con etiquetas de categoría, valores en fuente monospace y notas descriptivas.
+   - Panel de diagnóstico inteligente que clasifica el enlace en tiempo real (Fiable vs Degradado).
